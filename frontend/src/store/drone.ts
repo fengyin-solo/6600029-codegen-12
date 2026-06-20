@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Waypoint, NoFlyZone, TerrainPoint, FlightPlan, DroneConfig } from '../types';
+import type { Waypoint, NoFlyZone, TerrainPoint, FlightPlan, DroneConfig, WeatherAssessment, WeatherData } from '../types';
 import {
   aStarPathfind,
   rrtPathfind,
@@ -11,6 +11,7 @@ import {
   mockNoFlyZones,
   mockTerrainData,
 } from '../utils/pathfinding';
+import { assessWeatherWindow, generateMockWeather } from '../utils/weather';
 
 export const useDroneStore = defineStore('drone', () => {
   const waypoints = ref<Waypoint[]>([]);
@@ -21,6 +22,9 @@ export const useDroneStore = defineStore('drone', () => {
   const isSimulating = ref(false);
   const simProgress = ref(0);
   const mapCenter = ref<[number, number]>([39.9, 116.4]);
+
+  const weatherData = ref<WeatherData>(generateMockWeather());
+  const weatherAssessment = ref<WeatherAssessment | null>(null);
 
   const droneConfig = ref<DroneConfig>({
     maxAltitude: 500,
@@ -108,6 +112,23 @@ export const useDroneStore = defineStore('drone', () => {
     return exportKML(currentPlan.value);
   }
 
+  function assessWeather() {
+    weatherAssessment.value = assessWeatherWindow(
+      weatherData.value.windSpeed,
+      weatherData.value.visibility
+    );
+  }
+
+  function refreshWeather() {
+    weatherData.value = generateMockWeather();
+    assessWeather();
+  }
+
+  function setWeather(updates: Partial<WeatherData>) {
+    weatherData.value = { ...weatherData.value, ...updates };
+    assessWeather();
+  }
+
   // ─── Computed ─────────────────────────────────────────────────────────────
   const totalDistance = computed(() => {
     if (!currentPlan.value) return 0;
@@ -146,6 +167,8 @@ export const useDroneStore = defineStore('drone', () => {
     });
   });
 
+  assessWeather();
+
   return {
     waypoints,
     noFlyZones,
@@ -169,5 +192,10 @@ export const useDroneStore = defineStore('drone', () => {
     loadMockData,
     exportPlan,
     updatePlan,
+    weatherData,
+    weatherAssessment,
+    refreshWeather,
+    assessWeather,
+    setWeather,
   };
 });

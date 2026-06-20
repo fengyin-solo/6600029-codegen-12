@@ -37,3 +37,24 @@ export interface DroneConfig {
   consumptionRate: number;  // mAh/min
   safeDistance: number;     // meters from obstacles
 }
+
+export type WeatherLevel = 'suitable' | 'caution' | 'unsuitable';
+
+export interface WeatherAssessment {
+  windSpeed: number;            // m/s
+  visibility: number;           // km
+  windLevel: WeatherLevel;
+  visibilityLevel: WeatherLevel;
+  overall: WeatherLevel;
+  canTakeoff: boolean;
+  recommendation: string;
+  reasons: string[];
+}
+
+export interface WeatherData {
+  windSpeed: number;            // m/s
+  windDirection: number;        // degrees (0-359)
+  visibility: number;           // km
+  temperature: number;          // celsius
+  condition: string;            // e.g. 晴 / 多云 / 阴 / 小雨
+}
